@@ -1,0 +1,43 @@
+{
+  "name": "selfdiagnose",
+  "version": "1.0.0",
+  "description": "web application for self disease diagnose",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch_server": "webpack --config webpack.config.server.js --watch",
+    "watch_client": "webpack --config webpack.config.client.js --watch",
+    "watch_server_dev": "webpack --config webpack.config.server.js --watch -d",
+    "watch_client_dev": "webpack --config webpack.config.client.js --watch -d",
+    "start": "node build/dist/server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Scripter36/SelfDiagnose.git"
+  },
+  "author": "Scripter36 (1350adwx)",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/Scripter36/SelfDiagnose/issues"
+  },
+  "homepage": "https://github.com/Scripter36/SelfDiagnose#readme",
+  "dependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.0",
+    "@types/node": "^12.0.8",
+    "@types/webpack": "^4.4.32",
+    "awesome-typescript-loader": "^5.2.1",
+    "clean-webpack-plugin": "^3.0.0",
+    "copy-webpack-plugin": "^5.0.3",
+    "tslint": "^5.17.0",
+    "tslint-config-standard": "^8.0.1",
+    "typescript": "^3.5.1",
+    "webpack": "^4.33.0",
+    "webpack-cli": "^3.3.4",
+    "webpack-node-externals": "^1.7.2"
+  }
+}
