@@ -1,43 +1,42 @@
 {
-  "name": "selfdiagnose",
-  "version": "1.0.0",
-  "description": "web application for self disease diagnose",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "watch_server": "webpack --config webpack.config.server.js --watch",
-    "watch_client": "webpack --config webpack.config.client.js --watch",
-    "watch_server_dev": "webpack --config webpack.config.server.js --watch -d",
-    "watch_client_dev": "webpack --config webpack.config.client.js --watch -d",
-    "start": "node build/dist/server/index.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Scripter36/SelfDiagnose.git"
-  },
-  "author": "Scripter36 (1350adwx)",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/Scripter36/SelfDiagnose/issues"
-  },
-  "homepage": "https://github.com/Scripter36/SelfDiagnose#readme",
+  "name": "myapp",
+  "version": "0.1.0",
+  "private": true,
   "dependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
-    "express": "^4.17.1"
+    "@material-ui/core": "^4.0.0-rc.0",
+    "@material-ui/icons": "^4.2.0",
+    "@types/jest": "24.0.14",
+    "@types/node": "12.0.8",
+    "@types/react": "16.8.20",
+    "@types/react-dom": "16.8.4",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-scripts": "3.0.1",
+    "typescript": "3.5.2"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   },
   "devDependencies": {
-    "@types/express": "^4.17.0",
-    "@types/node": "^12.0.8",
-    "@types/webpack": "^4.4.32",
-    "awesome-typescript-loader": "^5.2.1",
-    "clean-webpack-plugin": "^3.0.0",
-    "copy-webpack-plugin": "^5.0.3",
     "tslint": "^5.17.0",
-    "tslint-config-standard": "^8.0.1",
-    "typescript": "^3.5.1",
-    "webpack": "^4.33.0",
-    "webpack-cli": "^3.3.4",
-    "webpack-node-externals": "^1.7.2"
+    "tslint-config-standard": "^8.0.1"
   }
 }
