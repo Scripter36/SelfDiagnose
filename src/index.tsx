@@ -10,6 +10,7 @@ import { ThemeProvider } from '@material-ui/styles'
 import Main from './Main'
 import Signin from './Signin'
 import Diagnose from './Diagnose'
+import Result from './Result'
 
 const theme = createMuiTheme({
   typography: {
@@ -34,6 +35,7 @@ ReactDOM.render(<Router>
     <Route path='/' exact component={Main} />
     <Route path='/signin/' exact component={Signin} />
     <Route path='/diagnose/' exact component={Diagnose} />
+    <Route path='/result/' exact component={Result} />
   </ThemeProvider>
 </Router>, document.getElementById('root'))
 
