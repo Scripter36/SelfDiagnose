@@ -1,18 +1,41 @@
 import React from 'react'
 
-import { Theme, withStyles, Button, Container, Paper, Box, Typography, TextField, Avatar, IconButton } from '@material-ui/core'
+import { Theme, withStyles, Button, Container, Paper, Box, Typography, TextField, Avatar, IconButton, createMuiTheme } from '@material-ui/core'
 import blue from '@material-ui/core/colors/blue'
 import ArrowBackIcon from '@material-ui/icons/ArrowBack'
+import { ThemeProvider } from '@material-ui/styles';
 
 interface IProps {
   classes: { [key: string]: any }
 }
 
 interface IState {
-  left: boolean
+  id: string,
+  password: string
 }
 
+const theme = createMuiTheme({
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+      '"Segoe UI Symbol"'
+    ].join(',')
+  }
+})
+
 class Signin extends React.Component<IProps, IState> {
+  constructor (props: IProps) {
+    super(props)
+    this.state = { id: '', password: '' }
+  }
   render () {
     const { classes } = this.props
     return <Box className={classes.root}>
@@ -32,17 +55,29 @@ class Signin extends React.Component<IProps, IState> {
           className={classes.textField}
           margin='normal'
           variant='outlined'
+          onChange={(e) => {
+            this.setState({ id: e.currentTarget.value })
+          }}
         />
-        <TextField
-          id='password-input'
-          label='Password'
-          className={classes.textField}
-          type='password'
-          autoComplete='current-password'
-          margin='normal'
-          variant='outlined'
-        />
-        <Button className={classes.button}>
+        <ThemeProvider theme={theme}>
+          <TextField
+            id='password-input'
+            label='Password'
+            className={classes.textField}
+            type='password'
+            autoComplete='current-password'
+            margin='normal'
+            variant='outlined'
+            onChange={(e) => {
+              this.setState({ password: e.currentTarget.value })
+            }}
+          />
+        </ThemeProvider>
+        <Button className={classes.button} onClick={() => {
+          this.signin(this.state.id, this.state.password).catch(e => {
+            console.error(e)
+          })
+        }}>
           sign in
         </Button>
         <Button variant='outlined' className={classes.google_button}>
@@ -52,6 +87,22 @@ class Signin extends React.Component<IProps, IState> {
       </Paper>
       </Container>
     </Box>
+  }
+
+  async signin (id: string, password: string) {
+    return fetch('/user/signin', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id, password }),
+      redirect: 'follow'
+    }).then((response) => {
+      if (response.redirected) {
+        window.location.href = response.url
+      }
+    })
   }
 
   static style (theme: Theme) {

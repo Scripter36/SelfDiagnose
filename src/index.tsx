@@ -11,6 +11,9 @@ import Main from './Main'
 import Signin from './Signin'
 import Diagnose from './Diagnose'
 import Result from './Result'
+import Hospital from './Hospital'
+import DiagnoseList from './DiagnoseList'
+import HospitalDetail from './HospitalDetail'
 
 const theme = createMuiTheme({
   typography: {
@@ -36,6 +39,9 @@ ReactDOM.render(<Router>
     <Route path='/signin/' exact component={Signin} />
     <Route path='/diagnose/' exact component={Diagnose} />
     <Route path='/result/' exact component={Result} />
+    <Route path='/hospital/' exact component={Hospital} />
+    <Route path='/hospital/detail' exact component={HospitalDetail} />
+    <Route path='/diagnose/list/' exact component={DiagnoseList} />
   </ThemeProvider>
 </Router>, document.getElementById('root'))
 

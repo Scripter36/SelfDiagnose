@@ -18,7 +18,7 @@ class Main extends React.Component<IProps> {
     const { classes } = this.props
     return (
       <Box className={classes.root}>
-        <Header title='Application Name'/>
+        <Header title='PocketClinic'/>
         <Grid container className={classes.container}>
           <Grid item xs={12} sm={12}>
             <Button className={classes.button} style={{ backgroundColor: 'white', color: 'black' }}>
@@ -31,17 +31,17 @@ class Main extends React.Component<IProps> {
             </Button>
           </Grid>
           <Grid item xs={6} sm={3}>
-            <Button className={classes.button} style={{ backgroundColor: teal['300'] }}>
+            <Button className={classes.button} style={{ backgroundColor: teal['300'] }} href='/hospital'>
               병원 찾기
             </Button>
           </Grid>
           <Grid item xs={6} sm={3}>
-            <Button className={classes.button} style={{ backgroundColor: purple['300'] }}>
+            <Button className={classes.button} style={{ backgroundColor: purple['300'] }} href='http://www.amc.seoul.kr/asan/healthinfo/disease/diseaseSubmain.do'>
               질병 사전
             </Button>
           </Grid>
           <Grid item xs={6} sm={3}>
-            <Button className={classes.button} style={{ backgroundColor: lightBlue['A100'] }}>
+            <Button className={classes.button} style={{ backgroundColor: lightBlue['A100'] }} href='/diagnose/list'>
               진단 기록
             </Button>
           </Grid>

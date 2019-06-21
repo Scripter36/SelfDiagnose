@@ -4,18 +4,18 @@ import { List, ListItem, ListItemIcon, ListItemText, Divider, ListItemAvatar, Av
 import ImageIcon from '@material-ui/icons/Image'
 import HospitalIcon from '@material-ui/icons/LocalHospital'
 
-class SideBar extends React.Component {
+interface IProps {
+  primary: string,
+  secondary: string
+}
+
+class SideBar extends React.Component<IProps> {
   render () {
     return (
       <div>
         <List>
           <ListItem>
-            <ListItemAvatar>
-              <Avatar>
-                <ImageIcon />
-              </Avatar>
-            </ListItemAvatar>
-            <ListItemText primary='1350adwx' secondary='1350adwx@gmail.com' />
+            <ListItemText primary={this.props.primary} secondary={this.props.secondary} />
           </ListItem>
           <Divider />
           <ListItem button key='자가 진단'>
