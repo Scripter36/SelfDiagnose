@@ -80,10 +80,6 @@ class Signin extends React.Component<IProps, IState> {
         }}>
           sign in
         </Button>
-        <Button variant='outlined' className={classes.google_button}>
-          <Avatar src='/assets/google_icon.svg' className={classes.extendedIcon} />
-          Sign in with google
-        </Button>
       </Paper>
       </Container>
     </Box>

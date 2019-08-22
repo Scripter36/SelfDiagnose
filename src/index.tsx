@@ -9,11 +9,14 @@ import { ThemeProvider } from '@material-ui/styles'
 
 import Main from './Main'
 import Signin from './Signin'
+import Signup from './Signup'
 import Diagnose from './Diagnose'
 import Result from './Result'
 import Hospital from './Hospital'
 import DiagnoseList from './DiagnoseList'
 import HospitalDetail from './HospitalDetail'
+
+import 'react-image-gallery/styles/css/image-gallery.css'
 
 const theme = createMuiTheme({
   typography: {
@@ -37,6 +40,7 @@ ReactDOM.render(<Router>
   <ThemeProvider theme={theme}>
     <Route path='/' exact component={Main} />
     <Route path='/signin/' exact component={Signin} />
+    <Route path='/signup' exact component={Signup} />
     <Route path='/diagnose/' exact component={Diagnose} />
     <Route path='/result/' exact component={Result} />
     <Route path='/hospital/' exact component={Hospital} />

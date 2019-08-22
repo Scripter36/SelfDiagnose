@@ -1,5 +1,5 @@
 import React from 'react'
-import { Theme, withStyles, Box, List, ListItem, ListItemText, Paper, Typography, Button, TextField, ListItemAvatar, Avatar, Divider } from '@material-ui/core'
+import { Theme, withStyles, Box, List, ListItem, ListItemText, Paper, Typography, Button, TextField, ListItemAvatar, Avatar, Divider, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@material-ui/core'
 import Header from './components/Header'
 import StarIcon from '@material-ui/icons/Star'
 import StarHalfIcon from '@material-ui/icons/StarHalf'
@@ -8,10 +8,12 @@ import queryString from 'query-string'
 
 import diseases from './assets/diseases.json'
 import hospitals from './assets/hospitals.json'
+import { FilledTextFieldProps } from '@material-ui/core/TextField'
 
 interface HospitalData {
-  rating: number,
-  comments: { contents: string, rating: number }[]
+  id: string,
+  contents: string,
+  rating: number
 }
 
 interface IProps {
@@ -20,11 +22,15 @@ interface IProps {
 
 interface IState {
   data: HospitalData[],
-  index: number
+  index: number,
+  open: boolean
 }
 
 class HospitalDetail extends React.Component<IProps, IState> {
-  constructor(props: IProps) {
+  contents: string
+  rating: number
+  id: number
+  constructor (props: IProps) {
     super(props)
     const id = parseInt(queryString.parse(window.location.search)['id'] as string, 10)
     let index = 0
@@ -35,16 +41,19 @@ class HospitalDetail extends React.Component<IProps, IState> {
       }
       return true
     })
-    this.state = { data: [], index }
+    this.id = index
+    this.state = { data: [], index, open: false }
     fetch(`/hospital/info?id=${this.state.index}`).then(async (res) => {
-      const data = await res.json()
-      this.setState({ data })
+      const response = await res.json()
+      this.setState({ data: response.result })
     }).catch(e => {
       console.error(e)
     })
+    this.contents = ''
+    this.rating = 0
   }
 
-  render() {
+  render () {
     const { classes } = this.props
     return <Box>
       <Header title='병원 정보' />
@@ -58,100 +67,191 @@ class HospitalDetail extends React.Component<IProps, IState> {
           주소: {hospitals[this.state.index].주소} ({hospitals[this.state.index].우편번호})
         </Typography>
       </Paper>
-      <Box style={{ display: 'flex', flexDirection: 'row' }}>
+      <Paper style={{ display: 'flex', flexDirection: 'column', padding: 8 }}>
+      <TextField
+        id='comment'
+        label='후기'
+        placeholder='후기를 작성해 주세요.'
+        multiline
+        className={classes.textField}
+        margin='normal'
+        variant='filled'
+        onChange={(e) => {
+          this.contents = e.target.value
+        }}
+      />
+      <Box style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-end', padding: 8 }}>
         <TextField
-          id="comment"
-          label="후기"
-          placeholder="후기를 작성해 주세요."
-          multiline
-          className={classes.textField}
-          margin="normal"
-          variant="filled"
+          id='rating'
+          label='별점'
+          placeholder='0~5'
+          type='number'
+          margin='normal'
+          variant='filled'
+          onChange={(e) => {
+            const rating = parseFloat(e.target.value)
+            if (!isNaN(rating)) {
+              if (rating < 0) {
+                e.target.value = '0'
+                this.rating = 0
+              } else if (rating > 5) {
+                e.target.value = '5'
+                this.rating = 5
+              } else {
+                this.rating = rating
+              }
+            }
+          }}
         />
-        <Button variant="contained" color="secondary" className={classes.submitButton}>
+        <Button variant='contained' color='secondary' className={classes.submitButton} onClick={() => {
+          fetch('/hospital/comment', {
+            method: 'POST',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: this.id, contents: this.contents, rating: this.rating })
+          }).then(async (res) => {
+            const result = await res.json()
+            if (result.success) {
+              // 성공
+              fetch(`/hospital/info?id=${this.state.index}`).then(async (res) => {
+                const response = await res.json()
+                this.setState({ data: response.result })
+              }).catch(e => {
+                console.error(e)
+              })
+            } else {
+              // 실패
+              this.setState({ open: true })
+            }
+          }).catch((e) => {
+            console.error(e)
+          })
+        }}>
           등록
-      </Button>
+        </Button>
       </Box>
+      </Paper>
       <List>
         <Paper>
           <Typography component='p' style={{ padding: 8, backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
             인기 긍정적 후기
-        </Typography>
-          <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-              <ListItemText primary="1350adwx" />
-              <Box style={{ flexGrow: 1 }} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-            </Box>
-            <Typography component='p'>
-              의사선생님께서 정말 친절하게 대해 주셨네요^^
-        </Typography>
-          </ListItem>
+          </Typography>
+          {(() => {
+            const sorted = this.state.data.sort((a, b) => b.rating - a.rating)
+            if (sorted.length > 0) {
+              return <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
+                <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                  <ListItemText primary={sorted[0].id} />
+                  <Box style={{ flexGrow: 1 }} />
+                  {HospitalDetail.getStars(sorted[0].rating, classes.icon)}
+                </Box>
+                <Typography component='p'>
+                  {sorted[0].contents}
+                </Typography>
+              </ListItem>
+            }
+          })()}
         </Paper>
-          <Box style={{ paddingTop: 8 }} />
+        <Box style={{ paddingTop: 8 }} />
         <Paper>
           <Typography component='p' style={{ padding: 8, backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
             인기 부정적 후기
-        </Typography>
-          <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-              <ListItemText primary="정원영" />
-              <Box style={{ flexGrow: 1 }} />
-              <StarHalfIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-            </Box>
-            <Typography component='p'>
-              서비스가 최악이네요. 다시는 안 가려고요.
-        </Typography>
-          </ListItem>
+          </Typography>
+          {(() => {
+            const sorted = this.state.data.sort((a, b) => a.rating - b.rating)
+            if (sorted.length > 0) {
+              return <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
+                <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                  <ListItemText primary={sorted[0].id} />
+                  <Box style={{ flexGrow: 1 }} />
+                  {HospitalDetail.getStars(sorted[0].rating, classes.icon)}
+                </Box>
+                <Typography component='p'>
+                  {sorted[0].contents}
+                </Typography>
+              </ListItem>
+            }
+          })()}
         </Paper>
         <Box style={{ paddingTop: 8 }} />
         <Paper>
           <Typography component='p' style={{ padding: 8, backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
             후기
-        </Typography>
-          <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-              <ListItemText primary="1350adwx" />
-              <Box style={{ flexGrow: 1 }} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-              <StarIcon className={classes.icon} />
-            </Box>
-            <Typography component='p'>
-              의사선생님께서 정말 친절하게 대해 주셨네요^^
-        </Typography>
-          </ListItem>
-          <Divider />
-          <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
-            <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
-              <ListItemText primary="정원영" />
-              <Box style={{ flexGrow: 1 }} />
-              <StarHalfIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-              <StarBorderIcon className={classes.icon} />
-            </Box>
-            <Typography component='p'>
-              서비스가 최악이네요. 다시는 안 가려고요.
-        </Typography>
-          </ListItem>
+          </Typography>
+          {
+            this.state.data.map((hospital) => {
+              return <ListItem style={{ display: 'flex', flexDirection: 'column', alignItems: 'start', backgroundColor: 'rgba(0, 0, 0, 0.09)' }}>
+                <Box style={{ display: 'flex', flexDirection: 'row', width: '100%' }}>
+                  <ListItemText primary={hospital.id} />
+                  <Box style={{ flexGrow: 1 }} />
+                  {HospitalDetail.getStars(hospital.rating, classes.icon)}
+                </Box>
+                <Typography component='p'>
+                  {hospital.contents}
+                </Typography>
+              </ListItem>
+            })
+          }
         </Paper>
       </List>
+      <Dialog
+        open={this.state.open}
+        onClose={() => {
+          this.setState({ open: false })
+        }}
+        aria-labelledby='alert-dialog-title'
+        aria-describedby='alert-dialog-description'
+      >
+        <DialogTitle id='alert-dialog-title'>{'로그인 하시겠습니까?'}</DialogTitle>
+        <DialogContent>
+          <DialogContentText id='alert-dialog-description'>
+            후기를 작성하려면 <a href='/signin'>로그인</a>이 필요합니다.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button color='primary' onClick={() => {
+            this.setState({ open: false })
+          }}>
+            취소
+          </Button>
+          <Button color='primary' onClick={() => {
+            window.location.href = '/signin'
+          }}>
+            로그인
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   }
 
-  static style(theme: Theme) {
+  static getStars (rating: number, className?: string) {
+    const n = Math.floor(rating)
+    const a = rating - n
+    return <Box>
+      {(() => {
+        const result: JSX.Element[] = []
+        for (let i = 0; i < n; i++) {
+          result.push(<StarIcon className={className} />)
+        }
+        return result
+      })()}
+      {(() => {
+        if (a > 0) return <StarHalfIcon className={className} />
+      })()}
+      {(() => {
+        let len = a === 0 ? 5 - n : 4 - n
+        const result: JSX.Element[] = []
+        for (let i = 0; i < len; i++) {
+          result.push(<StarBorderIcon className={className} />)
+        }
+        return result
+      })()}
+    </Box>
+  }
+
+  static style (theme: Theme) {
     return {
       paper: {
         padding: theme.spacing(3, 2)

@@ -1,6 +1,7 @@
 import React from 'react'
-import { Theme, withStyles, Box, ExpansionPanel, ExpansionPanelSummary, Typography, ExpansionPanelDetails, Paper, Button } from '@material-ui/core'
+import { Theme, withStyles, Box, ExpansionPanel, ExpansionPanelSummary, Typography, ExpansionPanelDetails, Paper, Button, Snackbar, IconButton } from '@material-ui/core'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import CloseIcon from '@material-ui/icons/Close'
 import queryString from 'query-string'
 
 import diseases from './assets/diseases.json'
@@ -12,15 +13,17 @@ interface IProps {
 
 interface IState {
   result: { posibility: number, index: number }[]
+  showFeedback: boolean,
+  openSnackbar: boolean
 }
 
 class Result extends React.Component<IProps, IState> {
   constructor (props: IProps) {
     super(props)
-    this.state = { result: [] }
+    this.state = { result: [], showFeedback: queryString.parse(window.location.search)['feedback'] === 'true', openSnackbar: false }
     fetch(`/diagnose/data?id=${queryString.parse(window.location.search)['id']}`).then(async (res) => {
-      const result = await res.json()
-      this.setState({ result })
+      const response = await res.json()
+      this.setState({ result: response.result })
     }).catch(e => {
       console.error(e)
     })
@@ -48,6 +51,51 @@ class Result extends React.Component<IProps, IState> {
           병원 검색하러 가기
         </Button>
       </Paper>
+      {(() => {
+        if (this.state.showFeedback) {
+          return <Paper className={classes.paper} style={{ margin: '16px 0' }}>
+            <Typography component='p'>
+              진단 결과에 만족하셨나요?
+            </Typography>
+            <Box style={{ display: 'flex' as 'flex', flexDirection: 'row' as 'row' }}>
+              <Button className={classes.button} onClick={() => { this.setState({ showFeedback: false, openSnackbar: true }) }}>
+                매우 만족
+              </Button>
+              <Button className={classes.button} onClick={() => { this.setState({ showFeedback: false, openSnackbar: true }) }}>
+                만족
+              </Button>
+              <Button className={classes.button} onClick={() => { this.setState({ showFeedback: false, openSnackbar: true }) }}>
+                불만
+              </Button>
+              <Button className={classes.button} onClick={() => { this.setState({ showFeedback: false, openSnackbar: true }) }}>
+                매우 불만
+              </Button>
+            </Box>
+          </Paper>
+        }
+      })()}
+      <Snackbar
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'left'
+        }}
+        open={this.state.openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => { this.setState({ openSnackbar: false }) }}
+        ContentProps={{
+          'aria-describedby': 'message-id'
+        }}
+        message={<span id='message-id'>설문에 참가해 주셔서 감사합니다.</span>}
+        action={[
+          <IconButton
+            key='close'
+            aria-label='Close'
+            color='inherit'
+            className={classes.close}
+            onClick={() => { this.setState({ openSnackbar: false }) }}
+          ><CloseIcon /></IconButton>
+        ]}
+      />
       {
         this.state.result.map((data) => {
           return <ExpansionPanel>
@@ -58,7 +106,7 @@ class Result extends React.Component<IProps, IState> {
             >
               <Typography className={classes.heading}>{`${diseases[data.index].name} (${Math.floor(data.posibility * 10000) / 100}%)`}</Typography>
             </ExpansionPanelSummary>
-            <ExpansionPanelDetails>
+            <ExpansionPanelDetails style={{ display: 'flex' as 'flex', flexDirection: 'column' as 'column' }}>
               <Typography>
                 진료과: {(() => {
                   if (Array.isArray(diseases[data.index].where)) {
@@ -69,6 +117,7 @@ class Result extends React.Component<IProps, IState> {
                   }
                 })()}
               </Typography>
+              <Typography><a href={`http://www.amc.seoul.kr/asan/healthinfo/disease/diseaseList.do?searchKeyword=${diseases[data.index].name.split('(')[0]}`}>질병 정보 보기</a></Typography>
             </ExpansionPanelDetails>
           </ExpansionPanel>
         })
