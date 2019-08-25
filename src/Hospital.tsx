@@ -3,7 +3,13 @@ import { Theme, withStyles, Box, Paper, ListItem, ListItemText, List, Typography
 
 import { withScriptjs, withGoogleMap, GoogleMap, Marker, InfoWindow } from 'react-google-maps'
 
-import hospitals from './assets/hospitals.json'
+import hospitals_ from './assets/hospitals.json'
+import hospitalTypes from './assets/hospital_types.json'
+
+import url from 'url'
+import querystring from 'querystring'
+
+const hospitals = hospitals_ as { 번호: number, 이름: string, 타입: string, 전화번호: string, 우편번호: string, 주소: string, 위도: number, 경도: number, 진료과: string, 거리: number }[]
 
 interface MarkerProps {
   info: string | JSX.Element
@@ -66,14 +72,14 @@ const MyGoogleMap = withScriptjs(withGoogleMap((props: GoogleMapProps) => {
         return <CustomMarker position={{ lat: markerData.위도, lng: markerData.경도 }} info={<List component='nav'>{
           markerData.데이터.map((data) => {
             return <ListItem button onClick={() => window.location.href = `/hospital/detail?id=${data.번호}`}>
-            <ListItemText primary={`${data.이름} (${(() => {
-              if (data.거리 < 1) {
-                return `${Math.floor(data.거리 * 1000)}m`
-              } else {
-                return `${Math.floor(data.거리 * 100) / 100}km`
-              }
-            })()})`} secondary={data.주소} />
-          </ListItem>
+              <ListItemText primary={`${data.이름} (${(() => {
+                if (data.거리 < 1) {
+                  return `${Math.floor(data.거리 * 1000)}m`
+                } else {
+                  return `${Math.floor(data.거리 * 100) / 100}km`
+                }
+              })()})`} secondary={data.주소} />
+            </ListItem>
           })
         }</List>} />
       })
@@ -89,16 +95,19 @@ interface IState {
   lat: number,
   lng: number,
   row: boolean,
-  showCount: number
+  showCount: number,
+  hospitalType: number
 }
 
 class Hospital extends React.Component<IProps, IState> {
   center: { lat: number, lng: number }
   mapRef: React.RefObject<GoogleMap>
+  showSelect: boolean
+
   constructor (props: IProps) {
     super(props)
     this.center = { lat: 37.56679716050026, lng: 126.97858435222469 }
-    this.state = { lat: 37.56679716050026, lng: 126.97858435222469, row: window.innerHeight > window.innerWidth, showCount: 30 }
+    this.state = { lat: 37.56679716050026, lng: 126.97858435222469, row: window.innerHeight > window.innerWidth, showCount: 30, hospitalType: -1 }
     navigator.geolocation.getCurrentPosition((position) => {
       this.center = { lat: position.coords.latitude, lng: position.coords.longitude }
       this.setState({ lat: position.coords.latitude, lng: position.coords.longitude })
@@ -110,81 +119,98 @@ class Hospital extends React.Component<IProps, IState> {
       }
     })
     this.mapRef = React.createRef()
+    this.showSelect = true
   }
+
   render () {
     const { classes } = this.props
+    const query = url.parse(window.location.href).query
+    if (query) {
+      const data = querystring.parse(query)
+      if (data.showSelect === 'false') this.showSelect = false
+    }
+
     const beforeSort: { 번호: number, 이름: string, 타입: string, 전화번호: string, 우편번호: string, 주소: string, 위도: number, 경도: number, 진료과: string, 거리: number }[] = []
     hospitals.forEach((hospital) => {
       if (!hospital.위도) return
       const distance = Hospital.distance(this.state.lat, this.state.lng, hospital.위도, hospital.경도)
-      if (hospital.이름 === '서울스페셜병원') console.log(this.state.lat, this.state.lng, hospital.위도, hospital.경도)
       beforeSort.push({ ...hospital, 거리: distance })
     })
-    console.log(beforeSort)
     const sorted = beforeSort.sort((a, b) => a.거리 - b.거리)
-    console.log(sorted)
+    const filtered = sorted.filter(hospital => this.state.hospitalType === -1 || hospitalTypes[this.state.hospitalType] === hospital.진료과)
     return <Grid container style={{ maxHeight: '100vh', position: 'relative', width: '100%', height: '100%', flexDirection: (this.state.row ? 'row' : 'column') }}>
-      <Grid item xs={12} style={this.state.row ? { height: `50%` } : { height: `100%`, width: '50%', minWidth: 'calc(100% - 400px)' }}>
-      <MyGoogleMap
-        lat={this.state.lat}
-        lng={this.state.lng}
-        mapRef={this.mapRef}
-        containerElement={<Paper style={{ height: `100%` }} />}
-        mapElement={<div style={{ height: `100%` }} />}
-        googleMapURL='https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=AIzaSyAe9wraXp9gVOSo9sFkxQoD9Npd4UYapVY'
-        loadingElement={<div style={{ height: `100%` }} />}
-        hospitalList={sorted.slice(1, this.state.showCount)}
-        onCenterChanged={() => {
-          const current = this.mapRef.current
-          if (current) {
-            const center = current.getCenter()
-            this.center = { lat: center.lat(), lng: center.lng() }
-          }
-        }} />
+      <Grid item xs={12} style={this.state.row ? { height: `50%` } : { height: `100%`, width: '50%', minWidth: 'calc(100% - 500px)' }}>
+        <MyGoogleMap
+          lat={this.state.lat}
+          lng={this.state.lng}
+          mapRef={this.mapRef}
+          containerElement={<Paper style={{ height: `100%` }} />}
+          mapElement={<div style={{ height: `100%` }} />}
+          googleMapURL='https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=geometry,drawing,places&key=AIzaSyAe9wraXp9gVOSo9sFkxQoD9Npd4UYapVY'
+          loadingElement={<div style={{ height: `100%` }} />}
+          hospitalList={filtered.slice(0, this.state.showCount)}
+          onCenterChanged={() => {
+            const current = this.mapRef.current
+            if (current) {
+              const center = current.getCenter()
+              this.center = { lat: center.lat(), lng: center.lng() }
+            }
+          }} />
       </Grid>
-      <Grid item xs={12} style={this.state.row ? {  overflowY: 'scroll' , height: `50%` } : {  overflowY: 'scroll' , height: `100%`, width: '50%', maxWidth: '400px' }}>
+      <Grid item xs={12} style={this.state.row ? { overflowY: 'scroll', height: `50%` } : { overflowY: 'scroll', height: `100%`, width: '50%', maxWidth: '500px' }}>
 
-      <List component='nav'>
-      <Box style={{ display: 'flex' as 'flex', flexDirection: 'row' }}>
-        <Button color='primary' className={classes.button} onClick={() => {
-          this.setState({ lat: this.center.lat, lng: this.center.lng })
-        }}>이 위치에서 재검색</Button>
-        <Box style={{ flexGrow: 1 }} />
-        <Select
-          value={this.state.showCount}
-          onChange={(e) => {
-            console.log(e.target.value)
-            this.setState({ showCount: e.target.value as number })
-          }}
-          inputProps={{
-            name: 'showcount',
-            id: 'showcount'
-          }}
-          style={{ marginRight: 16 }}
-        >
-          <MenuItem value={30}>30개씩 보기</MenuItem>
-          <MenuItem value={100}>100개씩 보기</MenuItem>
-          <MenuItem value={500}>500개씩 보기</MenuItem>
-          <MenuItem value={1000}>1000개씩 보기</MenuItem>
-          <MenuItem value={hospitals.length}>모두 보기</MenuItem>
-        </Select>
-      </Box>
-        {(() => {
-          const result: JSX.Element[] = []
-          for (let i = 0; i < this.state.showCount && i < sorted.length; i++) {
-            result.push(<ListItem button onClick={() => window.location.href = `/hospital/detail?id=${sorted[i].번호}`}>
-              <ListItemText primary={`${sorted[i].이름} (${(() => {
-                if (sorted[i].거리 < 1) {
-                  return `${Math.floor(sorted[i].거리 * 1000)}m`
-                } else {
-                  return `${Math.floor(sorted[i].거리 * 100) / 100}km`
+        <List component='nav'>
+          <Box style={{ display: 'flex' as 'flex', flexDirection: 'row' }}>
+            <Button color='primary' className={classes.button} onClick={() => {
+              this.setState({ lat: this.center.lat, lng: this.center.lng })
+            }}>이 위치에서 재검색</Button>
+            <Box style={{ flexGrow: 1 }} />
+            {
+              this.showSelect ? <Select
+                value={this.state.hospitalType}
+                onChange={(e) => {
+                  this.setState({ hospitalType: e.target.value as number })
+                }}
+                style={{ marginRight: 16 }}
+              >
+                <MenuItem value={-1}>모든 병원 보기</MenuItem>
+                {
+                  hospitalTypes.map((hospitalType, index) => {
+                    return <MenuItem value={index}>{hospitalType}</MenuItem>
+                  })
                 }
-              })()})`} secondary={sorted[i].주소} />
-            </ListItem>)
-          }
-          return result
-        })()}
-      </List>
+              </Select> : null
+            }
+            <Select
+              value={this.state.showCount}
+              onChange={(e) => {
+                this.setState({ showCount: e.target.value as number })
+              }}
+              style={{ marginRight: 16 }}
+            >
+              <MenuItem value={30}>30개씩 보기</MenuItem>
+              <MenuItem value={100}>100개씩 보기</MenuItem>
+              <MenuItem value={500}>500개씩 보기</MenuItem>
+              <MenuItem value={1000}>1000개씩 보기</MenuItem>
+              <MenuItem value={hospitals.length}>모두 보기</MenuItem>
+            </Select>
+          </Box>
+          {(() => {
+            const result: JSX.Element[] = []
+            for (let i = 0; i < this.state.showCount && i < filtered.length; i++) {
+              result.push(<ListItem button onClick={() => window.location.href = `/hospital/detail?id=${filtered[i].번호}`}>
+                <ListItemText primary={`${filtered[i].이름} (${(() => {
+                  if (filtered[i].거리 < 1) {
+                    return `${Math.floor(filtered[i].거리 * 1000)}m`
+                  } else {
+                    return `${Math.floor(filtered[i].거리 * 100) / 100}km`
+                  }
+                })()})`} secondary={`${filtered[i].진료과} | ${filtered[i].주소}`} />
+              </ListItem>)
+            }
+            return result
+          })()}
+        </List>
       </Grid>
     </Grid>
   }
