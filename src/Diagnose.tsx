@@ -72,15 +72,18 @@ class Diagnose extends React.Component<IProps, IState> {
                 뒤로 가기
               </Typography></a>)
               // @ts-ignore
-              const symptoms = categorizedSymptoms[this.state.selectedCategory] as string[]
-              symptoms.forEach((symptom, index) => {
-                result.push(<ListItem button
-                  onClick={() => {
-                    this.state.chips.push(index)
-                    this.setState({})
-                  }}>
-                  <ListItemText primary={symptom} />
-                </ListItem>)
+              const filteredSymptoms = categorizedSymptoms[this.state.selectedCategory] as string[]
+              filteredSymptoms.forEach((symptom) => {
+                const index = symptoms.indexOf(symptom)
+                if (!this.state.chips.includes(index)) {
+                  result.push(<ListItem button
+                    onClick={() => {
+                      this.state.chips.push(index)
+                      this.setState({})
+                    }}>
+                    <ListItemText primary={symptom} />
+                  </ListItem>)
+                }
               })
               return result
             }

@@ -11,7 +11,8 @@ import symptoms from './assets/symptoms.json'
 interface DiagnoseData {
   index: number,
   data: { posibility: number, index: number }[],
-  symptoms: number[]
+  symptoms: number[],
+  date: string
 }
 
 interface IProps {
@@ -44,40 +45,45 @@ class DiagnoseList extends React.Component<IProps, IState> {
     const { classes } = this.props
     return <Box style={{ display: 'flex', flexDirection: 'column' }}>
       <Header title='진단 기록' />
-      <Box className={classes.list}>
-        {
-          this.state.data.map((diagnoseData) => {
-            if (Hangul.disassembleToString(diagnoseData.symptoms.join(' ')).includes(Hangul.disassembleToString(this.state.search))) {
-              return <Paper>
-                <Typography variant='h5' component='h3'>
-                  {diseases[diagnoseData.data[0].index].name}
-                </Typography>
-                <Typography component='p' style={{ marginBottom: '64px' }}>
-                  증상: {diagnoseData.symptoms.join(', ')}
-                </Typography>
-                <Button color='primary' className={classes.button} onClick={() => {
-                  window.location.href = `/result?id=${diagnoseData.index}&feedback=true`
-                }}>
-                  자세히 보기
+      <Box style={{ display: 'flex', flexDirection: 'column', position: 'relative', flex: 1, overflowX: 'hidden' }}>
+        <Box className={classes.list}>
+          {
+            this.state.data.map((diagnoseData) => {
+              if (Hangul.disassembleToString(diagnoseData.symptoms.map((symptomNumber) => symptoms[symptomNumber]).join(', ') + ' ' + diseases[diagnoseData.data[0].index].name).includes(Hangul.disassembleToString(this.state.search))) {
+                return <Paper className={classes.paper}>
+                  <Typography variant='h5' component='h3'>
+                    {diseases[diagnoseData.data[0].index].name}
+                  </Typography>
+                  <Typography component='p'>
+                    증상: {diagnoseData.symptoms.map((symptomNumber) => symptoms[symptomNumber]).join(', ')}
+                  </Typography>
+                  <Typography component='p' style={{ fontSize: '12px', color: 'gray', marginBottom: '64px' }}>
+                    {diagnoseData.date}
+                  </Typography>
+                  <Button color='primary' className={classes.button} onClick={() => {
+                    window.location.href = `/result?id=${diagnoseData.index}&feedback=true`
+                  }}>
+                    자세히 보기
               </Button>
-              </Paper>
-            }
-          })
-        }
+                </Paper>
+              }
+            })
+          }
+        </Box>
+        <Paper className={classes.searchBar}>
+          <IconButton className={classes.iconButton} aria-label='Menu' onClick={() => window.history.back()}>
+            <ArrowBackIcon />
+          </IconButton>
+          <InputBase
+            className={classes.input}
+            placeholder='증상명 검색'
+            inputProps={{ 'aria-label': '증상명 검색' }}
+            onChange={(event) => {
+              this.setState({ search: event.currentTarget.value })
+            }}
+          />
+        </Paper>
       </Box>
-      <Paper className={classes.paper}>
-        <IconButton className={classes.iconButton} aria-label='Menu' onClick={() => window.history.back()}>
-          <ArrowBackIcon />
-        </IconButton>
-        <InputBase
-          className={classes.input}
-          placeholder='증상명 검색'
-          inputProps={{ 'aria-label': '증상명 검색' }}
-          onChange={(event) => {
-            this.setState({ search: event.currentTarget.value })
-          }}
-        />
-      </Paper>
       <Dialog
         open={this.state.open}
         onClose={() => {
@@ -113,8 +119,8 @@ class DiagnoseList extends React.Component<IProps, IState> {
       root: {
         width: '100%'
       },
-      paper: {
-        position: 'fixed' as 'fixed',
+      searchBar: {
+        position: 'absolute' as 'absolute',
         top: 0,
         left: 0,
         padding: '2px 4px',
@@ -122,8 +128,12 @@ class DiagnoseList extends React.Component<IProps, IState> {
         alignItems: 'center',
         width: '100%'
       },
+      paper: {
+        padding: theme.spacing(2),
+        margin: theme.spacing(2)
+      },
       list: {
-        flexGrow: 1,
+        flex: 1,
         paddingTop: 50,
         paddingBottom: 50
       }

@@ -120,15 +120,22 @@ class Hospital extends React.Component<IProps, IState> {
     })
     this.mapRef = React.createRef()
     this.showSelect = true
-  }
 
-  render () {
-    const { classes } = this.props
     const query = url.parse(window.location.href).query
     if (query) {
       const data = querystring.parse(query)
       if (data.showSelect === 'false') this.showSelect = false
+      if (typeof data.type === 'string' && data.type !== '') {
+        const index = hospitalTypes.indexOf(data.type)
+        if (index !== -1) {
+          this.state = { lat: 37.56679716050026, lng: 126.97858435222469, row: window.innerHeight > window.innerWidth, showCount: 30, hospitalType: index }
+        }
+      }
     }
+  }
+
+  render () {
+    const { classes } = this.props
 
     const beforeSort: { 번호: number, 이름: string, 타입: string, 전화번호: string, 우편번호: string, 주소: string, 위도: number, 경도: number, 진료과: string, 거리: number }[] = []
     hospitals.forEach((hospital) => {
